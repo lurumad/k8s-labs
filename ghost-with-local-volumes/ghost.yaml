@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost
+  labels:
+    app: ghost
+    tier: backend
+spec:
+  selector:
+    app: ghost
+    tier: backend
+  ports:
+  - port: 2368
+    targetPort: 2368
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ghost-pv-claim
+  labels:
+    app: ghost
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost
+spec:
+  selector:
+    matchLabels:
+      app: ghost
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ghost
+        tier: backend
+    spec:
+      containers:
+      - name: ghost
+        image: ghost:1-alpine
+        ports:
+        - containerPort: 2368
+        volumeMounts:
+        - name: ghost-persisten-storage
+          mountPath: /var/lib/ghost/content
+      volumes:
+        - name: ghost-persisten-storage
+          persistentVolumeClaim:
+            claimName: ghost-pv-claim
+
+          
